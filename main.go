@@ -49,8 +49,9 @@ type Market struct {
 
 //財布
 type Wallet struct {
-	btc float64
-	jpy float64
+	btc         float64 //保有btc
+	jpy         float64 //保有jpy
+	totalProfit float64 //累計確定利益
 }
 
 var histories []TradeHistory //取引履歴
@@ -114,7 +115,6 @@ func buy() {
 		wallet.btc += position.size
 		positions = append(positions, *position)
 		log.Printf("購入条件成立：BTC%f円で、%fBTC購入します。(使用：%f円)", market.price, position.size, amountJPYToBuy)
-		printWallet()
 	}
 	tradeHistory := new(TradeHistory)
 	tradeHistory.orderType = 0
@@ -122,6 +122,7 @@ func buy() {
 	tradeHistory.tradeDateTime = position.dateTime
 	tradeHistory.tradeSize = position.size
 	histories = append(histories, *tradeHistory)
+	printWallet()
 	outputToCSV()
 
 }
@@ -135,14 +136,16 @@ func sell(position Position) {
 			wallet.btc -= p.size
 			wallet.jpy += market.price * p.size
 			profit := (market.price - position.price) * position.size
-			log.Printf("利益確定条件成立：BTCが%f円になったため%fBTCを利益確定します(利益:%f円)", market.price, position.size, profit)
-			printWallet()
 			tradeHistory := new(TradeHistory)
 			tradeHistory.orderType = 1
 			tradeHistory.profit = profit
+			wallet.totalProfit += profit
 			tradeHistory.tradeDateTime = time.Now()
 			tradeHistory.tradeSize = position.size
 			histories = append(histories, *tradeHistory)
+
+			log.Printf("利益確定条件成立：BTCが%f円になったため%fBTCを利益確定します(利益:%f円)", market.price, position.size, profit)
+			printWallet()
 			outputToCSV()
 		}
 	}
@@ -184,7 +187,7 @@ func inputConfig() {
 func printWallet() {
 	log.Printf("\t------------------")
 	log.Printf("\t保有BTC:%f 保有JPY:%f円 ポジション数:%d個", wallet.btc, wallet.jpy, len(positions))
-	log.Printf("\t総資産評価額:%f円", wallet.jpy+wallet.btc*market.price)
+	log.Printf("\t総資産評価額:%f円(累計確定利益:%f円)", wallet.jpy+wallet.btc*market.price, wallet.totalProfit)
 	log.Printf("\t------------------\n\n")
 }
 
