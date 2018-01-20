@@ -17,20 +17,18 @@ const (
 )
 
 //シミュレーション用パラメータ
-const (
-	GridRange          = 0.05    //どれくらい下落したら買い下がるか
-	TakeProfitRange    = 0.05    //１ポジションあたり何%利益がでたら利益確定するか
-	MaxPositionNum     = 10.0    //最大ポジション数
-	InitialInvestiment = 1000000 //初期投資額
+var (
+	GridRange          = 0.05      //どれくらい下落したら買い下がるか
+	TakeProfitRange    = 0.05      //１ポジションあたり何%利益がでたら利益確定するか
+	MaxPositionNum     = 10.0      //最大ポジション数
+	InitialInvestiment = 1000000.0 //初期投資額
 )
 
 //トレード履歴
 type TradeHistory struct {
-	id            int       //ID
 	tradeDateTime time.Time //注文時間
 	tradeSize     float64   //注文数
 	orderType     int       //買0,売1
-	baseTradeID   int       //売りの場合の対応する買い注文のid。買いの場合は-1。
 	profit        float64   //この注文による利益（売りの場合のみ）
 }
 
@@ -140,6 +138,31 @@ func initWallet() {
 	wallet.jpy = InitialInvestiment
 }
 
+func inputConfig() {
+
+	fmt.Print("買い下がる幅を入力して下さい(ex:0.05)\n")
+	_, err := fmt.Scanf("%f", &GridRange)
+	if err != nil {
+		panic("不正な値")
+	}
+	fmt.Print("利益確定幅を入力してください(ex:0.05)\n")
+	_, err = fmt.Scanf("%f", &TakeProfitRange)
+	if err != nil {
+		panic("不正な値")
+	}
+	fmt.Print("最大ポジション数を入力してください(ex:10)\n")
+	_, err = fmt.Scanf("%f", &MaxPositionNum)
+	if err != nil {
+		panic("不正な値")
+	}
+	fmt.Print("初期投資額を入力して下さい(ex:1000000)\n")
+	_, err = fmt.Scanf("%f", &InitialInvestiment)
+	if err != nil {
+		panic("不正な値")
+	}
+
+}
+
 //財布の状況をログに出力します
 func printWallet() {
 	log.Printf("\t------------------")
@@ -154,7 +177,7 @@ func printConfig() {
 	log.Printf("購入下落幅%f", GridRange)
 	log.Printf("利益確定率:%f", TakeProfitRange)
 	log.Printf("最大ポジション数:%f", MaxPositionNum)
-	log.Printf("初期投資額:%d", InitialInvestiment)
+	log.Printf("初期投資額:%f", InitialInvestiment)
 	log.Print("でシミュレートします")
 	log.Printf("------------------\n\n")
 
@@ -162,6 +185,7 @@ func printConfig() {
 
 func main() {
 	initWallet()
+	inputConfig()
 	printConfig()
 
 	ws, err := websocket.Dial(url, "", origin)
