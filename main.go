@@ -24,6 +24,7 @@ var (
 	TakeProfitRange    = 0.05      //１ポジションあたり何%利益がでたら利益確定するか
 	MaxPositionNum     = 10.0      //最大ポジション数
 	InitialInvestiment = 1000000.0 //初期投資額
+	Spread             = 0.002     //スプレッド
 )
 
 //トレード履歴
@@ -110,7 +111,7 @@ func buy() {
 	amountJPYToBuy := wallet.jpy / (MaxPositionNum - float64(len(positions)))
 
 	if wallet.jpy >= amountJPYToBuy {
-		trueMarketPrice := market.price * 1.0003
+		trueMarketPrice := market.price * (1 + Spread)
 		position.size = amountJPYToBuy / trueMarketPrice
 		wallet.jpy = wallet.jpy - amountJPYToBuy
 		wallet.btc += position.size
@@ -134,9 +135,10 @@ func sell(position Position) {
 		if p.price != position.price {
 			newPositions = append(newPositions, p)
 		} else {
+			trueMarketPrice := market.price * (1 - Spread)
 			wallet.btc -= p.size
-			wallet.jpy += market.price * p.size
-			profit := (market.price - position.price) * position.size
+			wallet.jpy += trueMarketPrice * p.size
+			profit := (trueMarketPrice - position.price) * position.size
 			tradeHistory := new(TradeHistory)
 			tradeHistory.orderType = 1
 			tradeHistory.profit = profit
