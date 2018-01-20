@@ -4,10 +4,12 @@ import (
 	"encoding/json"
 	"fmt"
 	"log"
+	"os"
 	"strconv"
 	"strings"
 	"time"
 
+	"github.com/gocarina/gocsv"
 	"golang.org/x/net/websocket"
 )
 
@@ -26,10 +28,10 @@ var (
 
 //トレード履歴
 type TradeHistory struct {
-	tradeDateTime time.Time //注文時間
-	tradeSize     float64   //注文数
-	orderType     int       //買0,売1
-	profit        float64   //この注文による利益（売りの場合のみ）
+	tradeDateTime time.Time `csv:成立時間`  //注文時間
+	tradeSize     float64   `csv:取引サイズ` //注文数
+	orderType     int       `csv:取引種別`  //買0,売1
+	profit        float64   `csv:確定利益`  //この注文による利益（売りの場合のみ）
 }
 
 //保有ポジション
@@ -114,6 +116,15 @@ func buy() {
 		log.Printf("購入条件成立：BTC%f円で、%fBTC購入します。(使用：%f円)", market.price, position.size, amountJPYToBuy)
 		printWallet()
 	}
+	tradeHistory := new(TradeHistory)
+	tradeHistory.orderType = 0
+	tradeHistory.profit = 0
+	tradeHistory.tradeDateTime = position.dateTime
+	tradeHistory.tradeSize = position.size
+	histories = append(histories, *tradeHistory)
+	fmt.Printf("%v", histories)
+	outputToCSV()
+
 }
 
 func sell(position Position) {
@@ -124,9 +135,16 @@ func sell(position Position) {
 		} else {
 			wallet.btc -= p.size
 			wallet.jpy += market.price * p.size
-			log.Printf("利益確定条件成立：BTCが%f円になったため%fBTCを利益確定します(利益:%f円)", market.price, position.size, (market.price-position.price)*position.size)
+			profit := (market.price - position.price) * position.size
+			log.Printf("利益確定条件成立：BTCが%f円になったため%fBTCを利益確定します(利益:%f円)", market.price, position.size, profit)
 			printWallet()
-
+			tradeHistory := new(TradeHistory)
+			tradeHistory.orderType = 1
+			tradeHistory.profit = profit
+			tradeHistory.tradeDateTime = time.Now()
+			tradeHistory.tradeSize = position.size
+			histories = append(histories, *tradeHistory)
+			outputToCSV()
 		}
 	}
 	positions = newPositions
@@ -181,6 +199,11 @@ func printConfig() {
 	log.Print("でシミュレートします")
 	log.Printf("------------------\n\n")
 
+}
+
+func outputToCSV() {
+	file, _ := os.OpenFile("sample.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	gocsv.MarshalFile(&histories, file)
 }
 
 func main() {

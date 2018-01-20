@@ -2,10 +2,10 @@
 
 
 [[projects]]
-  name = "github.com/thoas/go-funk"
+  branch = "master"
+  name = "github.com/gocarina/gocsv"
   packages = ["."]
-  revision = "14304e8530de7dbb909c8305591b3a8370dd9dbb"
-  version = "0.2"
+  revision = "45cbb9cde54ea46d800c4fcd1a686949ac6d87a3"
 
 [[projects]]
   branch = "master"
@@ -13,9 +13,15 @@
   packages = ["websocket"]
   revision = "a337091b0525af65de94df2eb7e98bd9962dcbe2"
 
+[[projects]]
+  branch = "master"
+  name = "golang.org/x/text"
+  packages = ["encoding","encoding/internal","encoding/internal/identifier","encoding/japanese","internal/gen","transform","unicode/cldr"]
+  revision = "e19ae1496984b1c655b8044a65c0300a3c878dd3"
+
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "2932ddd22822bfea1939b2cc8a5470787d8804a34bbed961195a5d5332068122"
+  inputs-digest = "f654c5f5bde56f5ff5a5751f4d9953950aa8a0ed465b270a7ae7ac0b25ec43ce"
   solver-name = "gps-cdcl"
   solver-version = 1
