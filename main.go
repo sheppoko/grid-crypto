@@ -211,8 +211,8 @@ func outputToCSV() {
 }
 
 func main() {
-	initWallet()
 	inputConfig()
+	initWallet()
 	printConfig()
 
 	ws, err := websocket.Dial(url, "", origin)
