@@ -2,52 +2,10 @@
 
 
 [[projects]]
-  name = "github.com/dgrijalva/jwt-go"
+  name = "github.com/thoas/go-funk"
   packages = ["."]
-  revision = "dbeaa9332f19a944acb5736b4456cfcc02140e29"
-  version = "v3.1.0"
-
-[[projects]]
-  name = "github.com/labstack/echo"
-  packages = [".","middleware"]
-  revision = "b28538b2e3f5446fe6e0e47ee34cd74b662ca2ab"
-  version = "3.2.4"
-
-[[projects]]
-  name = "github.com/labstack/gommon"
-  packages = ["bytes","color","log","random"]
-  revision = "57409ada9da0f2afad6664c49502f8c50fbd8476"
-  version = "0.2.3"
-
-[[projects]]
-  name = "github.com/mattn/go-colorable"
-  packages = ["."]
-  revision = "167de6bfdfba052fa6b2d3664c8f5272e23c9072"
-  version = "v0.0.9"
-
-[[projects]]
-  name = "github.com/mattn/go-isatty"
-  packages = ["."]
-  revision = "0360b2af4f38e8d38c7fce2a9f4e702702d73a39"
-  version = "v0.0.3"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/valyala/bytebufferpool"
-  packages = ["."]
-  revision = "e746df99fe4a3986f4d4f79e13c1e0117ce9c2f7"
-
-[[projects]]
-  branch = "master"
-  name = "github.com/valyala/fasttemplate"
-  packages = ["."]
-  revision = "dcecefd839c4193db0d35b88ec65b4c12d360ab0"
-
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/crypto"
-  packages = ["acme","acme/autocert"]
-  revision = "6a293f2d4b14b8e6d3f0539e383f6d0d30fce3fd"
+  revision = "14304e8530de7dbb909c8305591b3a8370dd9dbb"
+  version = "0.2"
 
 [[projects]]
   branch = "master"
@@ -55,15 +13,9 @@
   packages = ["websocket"]
   revision = "a337091b0525af65de94df2eb7e98bd9962dcbe2"
 
-[[projects]]
-  branch = "master"
-  name = "golang.org/x/sys"
-  packages = ["unix"]
-  revision = "1e2299c37cc91a509f1b12369872d27be0ce98a6"
-
 [solve-meta]
   analyzer-name = "dep"
   analyzer-version = 1
-  inputs-digest = "c916c79cfc19186fa6026b6f6626e3636652e5862adb52d46a9edfbd66896d7a"
+  inputs-digest = "2932ddd22822bfea1939b2cc8a5470787d8804a34bbed961195a5d5332068122"
   solver-name = "gps-cdcl"
   solver-version = 1

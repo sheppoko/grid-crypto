@@ -3,6 +3,7 @@ package main
 import (
 	"encoding/json"
 	"fmt"
+	"log"
 	"strconv"
 	"strings"
 	"time"
@@ -10,23 +11,119 @@ import (
 	"golang.org/x/net/websocket"
 )
 
-var (
+const (
 	origin = "http://localhost:8787/"
 	url    = "wss://ws-api.coincheck.com/"
 )
 
-// EchoMsg is Sample Websocket Message
-type EchoMsg struct {
-	transactionId int
-	channel       string // ID
-	price         float32
-	quantity      float32
-	kind          string
+//シミュレーション用パラメータ
+const (
+	GridRange          = 0.00005 //どれくらい下落したら買い下がるか
+	TakeProfitRange    = 0.05    //１ポジションあたり何%利益がでたら利益確定するか
+	MaxPositionNum     = 10.0    //最大ポジション数
+	InitialInvestiment = 1000000 //初期投資額
+)
+
+//トレード履歴
+type TradeHistory struct {
+	id            int       //ID
+	tradeDateTime time.Time //注文時間
+	tradeSize     float64   //注文数
+	orderType     int       //買0,売1
+	baseTradeID   int       //売りの場合の対応する買い注文のid。買いの場合は-1。
+	profit        float64   //この注文による利益（売りの場合のみ）
 }
 
-var lastunixtime int64
+//保有ポジション
+type Position struct {
+	dateTime time.Time //取得時間
+	price    float64   //ポジションを取った際の値段
+	size     float64   //量
+}
+
+//マーケット
+type Market struct {
+	price      float64   //価格
+	lastUpdate time.Time //最終更新
+}
+
+//財布
+type Wallet struct {
+	btc float64
+	jpy float64
+}
+
+var histories []TradeHistory //取引履歴
+var positions []Position     //現在のポジション配列
+var market Market            //マーケット情報
+var wallet Wallet            //自分の財布
+
+//positions配列から最低価格のポジションの値段を返却します
+//ポジションがない場合はfalse,0を返却します
+//ポジションがある場合はtrue,最低ポジション取得価格を返却します
+func getLowestPostionPrice() (bool, float64) {
+	hasPosition := false
+	lowestPrice := 0.0
+	for _, position := range positions {
+		hasPosition = true
+		if lowestPrice > position.price || lowestPrice == 0 {
+			lowestPrice = position.price
+		}
+	}
+	return hasPosition, lowestPrice
+}
+
+//市場価格からポジションを取るべきか判断し必要であればポジションをとります
+func buyIfNeed() bool {
+	hasPosition, lowestPositionPrice := getLowestPostionPrice()
+	shouldBuy := false
+
+	//市場価格が最低ポジションより指定レンジ下げた
+	if lowestPositionPrice*(1-GridRange) >= market.price {
+		shouldBuy = true
+	}
+
+	//ポジションがない
+	if !hasPosition {
+		shouldBuy = true
+	}
+	if shouldBuy {
+		buy()
+	}
+	return shouldBuy
+}
+
+func buy() {
+	position := new(Position)
+	position.dateTime = time.Now()
+	position.price = market.price
+	amountJPYToBuy := wallet.jpy / (MaxPositionNum - float64(len(positions)))
+
+	if wallet.jpy >= amountJPYToBuy {
+		position.size = amountJPYToBuy / market.price
+		wallet.jpy = wallet.jpy - amountJPYToBuy
+		wallet.btc += position.size
+		positions = append(positions, *position)
+		log.Printf("BTCが%f円になったため、%f円使用して%fBTC購入します。残JPY:%f円 保有BTC:%f", market.price, amountJPYToBuy, position.size, wallet.jpy, wallet.btc)
+		log.Printf("現在の総資産評価額は%f円です", wallet.jpy+wallet.btc*market.price)
+		log.Println()
+	}
+
+}
+
+//財布を投資開始状態に戻します
+func initWallet() {
+	wallet.btc = 0
+	wallet.jpy = InitialInvestiment
+}
+
+//ポジションを手仕舞いします
+func (p *Position) close() {
+
+}
 
 func main() {
+	initWallet()
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
 		panic(err)
@@ -39,7 +136,7 @@ func main() {
 	go forever()
 	fmt.Scanln()
 
-	defer fmt.Printf("Web Socket Client Sample end.")
+	defer fmt.Printf("Web Socket End")
 }
 
 func forever() {
@@ -60,6 +157,8 @@ func receiveMsg(ws *websocket.Conn) {
 		priceString := string(priceBit)
 		priceString = strings.Replace(priceString, `"`, "", -1)
 		priceFloat, _ := strconv.ParseFloat(priceString, 32)
-		fmt.Printf("%v\n", priceFloat)
+		market.price = priceFloat
+		market.lastUpdate = time.Now()
+		buyIfNeed()
 	}
 }
