@@ -183,7 +183,7 @@ func inputConfig() {
 //財布の状況をログに出力します
 func printWallet() {
 	log.Printf("\t------------------")
-	log.Printf("\t保有BTC:%f 保有JPY:%f円", wallet.btc, wallet.jpy)
+	log.Printf("\t保有BTC:%f 保有JPY:%f円 ポジション数:%d個", wallet.btc, wallet.jpy, len(positions))
 	log.Printf("\t総資産評価額:%f円", wallet.jpy+wallet.btc*market.price)
 	log.Printf("\t------------------\n\n")
 }
