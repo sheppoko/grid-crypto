@@ -159,22 +159,22 @@ func initWallet() {
 func inputConfig() {
 
 	fmt.Print("買い下がる幅を入力して下さい(ex:0.05)")
-	_, err := fmt.Scanf("%f", &GridRange)
+	_, err := fmt.Scanf("%f\n", &GridRange)
 	if err != nil {
 		panic("不正な値")
 	}
 	fmt.Print("利益確定幅を入力してください(ex:0.05)")
-	_, err = fmt.Scanf("%f", &TakeProfitRange)
+	_, err = fmt.Scanf("%f\n", &TakeProfitRange)
 	if err != nil {
 		panic("不正な値")
 	}
 	fmt.Print("最大ポジション数を入力してください(ex:10)")
-	_, err = fmt.Scanf("%f", &MaxPositionNum)
+	_, err = fmt.Scanf("%f\n", &MaxPositionNum)
 	if err != nil {
 		panic("不正な値")
 	}
 	fmt.Print("初期投資額を入力して下さい(ex:1000000)")
-	_, err = fmt.Scanf("%f", &InitialInvestiment)
+	_, err = fmt.Scanf("%f\n", &InitialInvestiment)
 	if err != nil {
 		panic("不正な値")
 	}
