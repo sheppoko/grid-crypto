@@ -28,10 +28,10 @@ var (
 
 //トレード履歴
 type TradeHistory struct {
-	tradeDateTime time.Time `csv:成立時間`  //注文時間
-	tradeSize     float64   `csv:取引サイズ` //注文数
-	orderType     int       `csv:取引種別`  //買0,売1
-	profit        float64   `csv:確定利益`  //この注文による利益（売りの場合のみ）
+	tradeDateTime time.Time //注文時間
+	tradeSize     float64   //注文数
+	orderType     int       //買0,売1
+	profit        float64   //この注文による利益（売りの場合のみ）
 }
 
 //保有ポジション
@@ -122,7 +122,6 @@ func buy() {
 	tradeHistory.tradeDateTime = position.dateTime
 	tradeHistory.tradeSize = position.size
 	histories = append(histories, *tradeHistory)
-	fmt.Printf("%v", histories)
 	outputToCSV()
 
 }
@@ -203,6 +202,7 @@ func printConfig() {
 
 func outputToCSV() {
 	file, _ := os.OpenFile("sample.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	defer file.Close()
 	gocsv.MarshalFile(&histories, file)
 }
 
