@@ -3,8 +3,8 @@ package main
 import (
 	"encoding/json"
 	"fmt"
-	"os"
 	"strconv"
+	"strings"
 	"time"
 
 	"golang.org/x/net/websocket"
@@ -56,22 +56,10 @@ func receiveMsg(ws *websocket.Conn) {
 	var data []interface{}
 	for {
 		websocket.JSON.Receive(ws, &data)
-		price, _ := json.Marshal(data[2])
-		t := time.Now()
-
-		//os.O_RDWRを渡しているので、同時に読み込みも可能
-		file, err := os.OpenFile("./log.csv", os.O_RDWR|os.O_CREATE|os.O_APPEND, 0777)
-		if err != nil {
-			//エラー処理
-			fmt.Println(err)
-		}
-		fmt.Printf("%v\n", strconv.FormatInt(t.Unix(), 10)+","+string(price)+",coincheck")
-
-		if t.Unix() != lastunixtime {
-			lastunixtime = t.Unix()
-			//fmt.Fprintln(file, strconv.FormatInt(t.Unix(), 10)+","+string(price)+",coincheck") //書き込み
-		}
-
-		file.Close()
+		priceBit, _ := json.Marshal(data[2])
+		priceString := string(priceBit)
+		priceString = strings.Replace(priceString, `"`, "", -1)
+		priceFloat, _ := strconv.ParseFloat(priceString, 32)
+		fmt.Printf("%v\n", priceFloat)
 	}
 }
