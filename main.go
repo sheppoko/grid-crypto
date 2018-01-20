@@ -110,20 +110,21 @@ func buy() {
 	amountJPYToBuy := wallet.jpy / (MaxPositionNum - float64(len(positions)))
 
 	if wallet.jpy >= amountJPYToBuy {
-		position.size = amountJPYToBuy / market.price
+		trueMarketPrice := market.price * 1.0003
+		position.size = amountJPYToBuy / trueMarketPrice
 		wallet.jpy = wallet.jpy - amountJPYToBuy
 		wallet.btc += position.size
 		positions = append(positions, *position)
-		log.Printf("購入条件成立：BTC%f円で、%fBTC購入します。(使用：%f円)", market.price, position.size, amountJPYToBuy)
+		log.Printf("購入条件成立：BTC%f円で、%fBTC購入します。(使用：%f円)", trueMarketPrice, position.size, amountJPYToBuy)
+		printWallet()
+		tradeHistory := new(TradeHistory)
+		tradeHistory.orderType = 0
+		tradeHistory.profit = 0
+		tradeHistory.tradeDateTime = position.dateTime
+		tradeHistory.tradeSize = position.size
+		histories = append(histories, *tradeHistory)
+		outputToCSV()
 	}
-	tradeHistory := new(TradeHistory)
-	tradeHistory.orderType = 0
-	tradeHistory.profit = 0
-	tradeHistory.tradeDateTime = position.dateTime
-	tradeHistory.tradeSize = position.size
-	histories = append(histories, *tradeHistory)
-	printWallet()
-	outputToCSV()
 
 }
 
