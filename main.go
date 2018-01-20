@@ -25,14 +25,16 @@ var (
 	MaxPositionNum     = 10.0      //最大ポジション数
 	InitialInvestiment = 1000000.0 //初期投資額
 	Spread             = 0.002     //スプレッド
+	CsvFileName        = "log" + time.Now().String() + ".csv"
 )
 
 //トレード履歴
 type TradeHistory struct {
-	tradeDateTime time.Time //注文時間
-	tradeSize     float64   //注文数
-	orderType     int       //買0,売1
-	profit        float64   //この注文による利益（売りの場合のみ）
+	TradeDateTime time.Time `csv:"trade_time"` //注文時間
+	BtcJpy        float64   `csv:"btc_jpy"`
+	TradeSize     float64   `csv:"position_size"` //注文数
+	OrderType     int       `csv:"order_type"`    //買0,売1
+	Profit        float64   `csv:"profit"`        //この注文による利益（売りの場合のみ）
 }
 
 //保有ポジション
@@ -55,10 +57,10 @@ type Wallet struct {
 	totalProfit float64 //累計確定利益
 }
 
-var histories []TradeHistory //取引履歴
-var positions []Position     //現在のポジション配列
-var market Market            //マーケット情報
-var wallet Wallet            //自分の財布
+var histories []*TradeHistory //取引履歴
+var positions []*Position     //現在のポジション配列
+var market Market             //マーケット情報
+var wallet Wallet             //自分の財布
 
 //positions配列から最低価格のポジションの値段を返却します
 //ポジションがない場合はfalse,0を返却します
@@ -115,22 +117,23 @@ func buy() {
 		position.size = amountJPYToBuy / trueMarketPrice
 		wallet.jpy = wallet.jpy - amountJPYToBuy
 		wallet.btc += position.size
-		positions = append(positions, *position)
+		positions = append(positions, position)
 		log.Printf("購入条件成立：BTC%f円で、%fBTC購入します。(使用：%f円)", trueMarketPrice, position.size, amountJPYToBuy)
 		printWallet()
-		tradeHistory := new(TradeHistory)
-		tradeHistory.orderType = 0
-		tradeHistory.profit = 0
-		tradeHistory.tradeDateTime = position.dateTime
-		tradeHistory.tradeSize = position.size
-		histories = append(histories, *tradeHistory)
+		histories = append(histories, &TradeHistory{
+			OrderType:     0,
+			Profit:        0,
+			BtcJpy:        trueMarketPrice,
+			TradeDateTime: position.dateTime,
+			TradeSize:     position.size,
+		})
 		outputToCSV()
 	}
 
 }
 
-func sell(position Position) {
-	newPositions := []Position{}
+func sell(position *Position) {
+	newPositions := []*Position{}
 	for _, p := range positions {
 		if p.price != position.price {
 			newPositions = append(newPositions, p)
@@ -139,13 +142,14 @@ func sell(position Position) {
 			wallet.btc -= p.size
 			wallet.jpy += trueMarketPrice * p.size
 			profit := (trueMarketPrice - position.price) * position.size
-			tradeHistory := new(TradeHistory)
-			tradeHistory.orderType = 1
-			tradeHistory.profit = profit
 			wallet.totalProfit += profit
-			tradeHistory.tradeDateTime = time.Now()
-			tradeHistory.tradeSize = position.size
-			histories = append(histories, *tradeHistory)
+			histories = append(histories, &TradeHistory{
+				OrderType:     1,
+				Profit:        profit,
+				BtcJpy:        trueMarketPrice,
+				TradeDateTime: time.Now(),
+				TradeSize:     position.size,
+			})
 
 			log.Printf("利益確定条件成立：BTCが%f円になったため%fBTCを利益確定します(利益:%f円)", market.price, position.size, profit)
 			printWallet()
@@ -207,7 +211,7 @@ func printConfig() {
 }
 
 func outputToCSV() {
-	file, _ := os.OpenFile("sample.csv", os.O_RDWR|os.O_CREATE, os.ModePerm)
+	file, _ := os.OpenFile(CsvFileName, os.O_RDWR|os.O_CREATE, os.ModePerm)
 	defer file.Close()
 	gocsv.MarshalFile(&histories, file)
 }
