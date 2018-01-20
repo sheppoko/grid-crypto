@@ -18,7 +18,7 @@ const (
 
 //シミュレーション用パラメータ
 const (
-	GridRange          = 0.00005 //どれくらい下落したら買い下がるか
+	GridRange          = 0.05    //どれくらい下落したら買い下がるか
 	TakeProfitRange    = 0.05    //１ポジションあたり何%利益がでたら利益確定するか
 	MaxPositionNum     = 10.0    //最大ポジション数
 	InitialInvestiment = 1000000 //初期投資額
@@ -93,6 +93,15 @@ func buyIfNeed() bool {
 	return shouldBuy
 }
 
+//ポジションごとに条件を満たした場合に利益確定します
+func sellIfNeed() {
+	for _, position := range positions {
+		if position.price*(1+TakeProfitRange) < market.price {
+			sell(position)
+		}
+	}
+}
+
 func buy() {
 	position := new(Position)
 	position.dateTime = time.Now()
@@ -104,11 +113,25 @@ func buy() {
 		wallet.jpy = wallet.jpy - amountJPYToBuy
 		wallet.btc += position.size
 		positions = append(positions, *position)
-		log.Printf("BTCが%f円になったため、%f円使用して%fBTC購入します。残JPY:%f円 保有BTC:%f", market.price, amountJPYToBuy, position.size, wallet.jpy, wallet.btc)
-		log.Printf("現在の総資産評価額は%f円です", wallet.jpy+wallet.btc*market.price)
-		log.Println()
+		log.Printf("購入条件成立：BTC%f円で、%fBTC購入します。(使用：%f円)", market.price, position.size, amountJPYToBuy)
+		printWallet()
 	}
+}
 
+func sell(position Position) {
+	newPositions := []Position{}
+	for _, p := range positions {
+		if p.price != position.price {
+			newPositions = append(newPositions, p)
+		} else {
+			wallet.btc -= p.size
+			wallet.jpy += market.price * p.size
+			log.Printf("利益確定条件成立：BTCが%f円になったため%fBTCを利益確定します(利益:%f円)", market.price, position.size, (market.price-position.price)*position.size)
+			printWallet()
+
+		}
+	}
+	positions = newPositions
 }
 
 //財布を投資開始状態に戻します
@@ -117,25 +140,38 @@ func initWallet() {
 	wallet.jpy = InitialInvestiment
 }
 
-//ポジションを手仕舞いします
-func (p *Position) close() {
+//財布の状況をログに出力します
+func printWallet() {
+	log.Printf("\t------------------")
+	log.Printf("\t保有BTC:%f 保有JPY:%f円", wallet.btc, wallet.jpy)
+	log.Printf("\t総資産評価額:%f円", wallet.jpy+wallet.btc*market.price)
+	log.Printf("\t------------------\n\n")
+}
+
+//設定内容を出力します
+func printConfig() {
+	log.Printf("------------------")
+	log.Printf("購入下落幅%f", GridRange)
+	log.Printf("利益確定率:%f", TakeProfitRange)
+	log.Printf("最大ポジション数:%f", MaxPositionNum)
+	log.Printf("初期投資額:%d", InitialInvestiment)
+	log.Print("でシミュレートします")
+	log.Printf("------------------\n\n")
 
 }
 
 func main() {
 	initWallet()
+	printConfig()
+
 	ws, err := websocket.Dial(url, "", origin)
 	if err != nil {
 		panic(err)
 	}
-
 	go receiveMsg(ws)
-
 	sendMsg(ws, map[string]string{"type": "subscribe", "channel": "btc_jpy-trades"})
-
 	go forever()
 	fmt.Scanln()
-
 	defer fmt.Printf("Web Socket End")
 }
 
@@ -160,5 +196,6 @@ func receiveMsg(ws *websocket.Conn) {
 		market.price = priceFloat
 		market.lastUpdate = time.Now()
 		buyIfNeed()
+		sellIfNeed()
 	}
 }
