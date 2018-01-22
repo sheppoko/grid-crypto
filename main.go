@@ -152,11 +152,12 @@ func sell(position *Position) {
 			})
 
 			log.Printf("利益確定条件成立：BTCが%f円になったため%fBTCを利益確定します(利益:%f円)", market.price, position.size, profit)
-			printWallet()
 			outputToCSV()
 		}
 	}
 	positions = newPositions
+	printWallet()
+
 }
 
 //財布を投資開始状態に戻します
