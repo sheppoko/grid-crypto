@@ -106,6 +106,7 @@ func sellIfNeed() {
 	}
 }
 
+//新しいポジションを成り行きで取ります
 func buy() {
 	position := new(Position)
 	position.dateTime = time.Now()
@@ -132,6 +133,7 @@ func buy() {
 
 }
 
+//引数に与えられたポジションを決済します
 func sell(position *Position) {
 	newPositions := []*Position{}
 	for _, p := range positions {
