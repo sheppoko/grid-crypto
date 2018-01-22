@@ -25,7 +25,7 @@ var (
 	MaxPositionNum     = 10.0      //最大ポジション数
 	InitialInvestiment = 1000000.0 //初期投資額
 	Spread             = 0.002     //スプレッド
-	CsvFileName        = "log" + time.Now().String() + ".csv"
+	CsvFileName        = "log.csv"
 )
 
 //トレード履歴
